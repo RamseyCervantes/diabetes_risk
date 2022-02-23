@@ -1,0 +1,1 @@
+Ramsey's training in Stata for data analysis
