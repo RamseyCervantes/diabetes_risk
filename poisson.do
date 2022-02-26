@@ -1,14 +1,8 @@
-// Install coeff plot
+// Install necessary packages
 ssc install coefplot, replace
-// Install graph packages
-ssc install grstyle, replace
-ssc install palettes, replace
-ssc install colrspace
-ssc install blindschemes
+ssc install blindschemes, replace
 // Set graph settings
-grstyle clear
-set scheme s2color
-grstyle init
+set scheme plotplainblind
 
 use https://www.stata-press.com/data/r17/heartvalve.dta, clear
 describe
