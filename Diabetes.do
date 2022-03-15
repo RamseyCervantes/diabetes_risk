@@ -11,9 +11,8 @@ describe
 svyset psu [pweight = finalwgt], strata(strata)
 
 //global macros
-global personstats "c.age c.weight c.height"
 global demograph "i.race i.sex"
-global cov1 "c.age c.weight c.height"
+global cov1 "i.race c.age c.weight c.height"
 global cov2 "i.race $cov1"
 //global workdir "C:\Users\ramse\Documents\GitLab\Ramsey Onboarding"
 
@@ -86,20 +85,23 @@ foreach x in ///
 
 *Remove existing csv files
 capture noisily: rm "Table1.csv"
+capture noisily: rm "Table1_margins.csv"
 estimates drop _all
-//chances of diabetes for males and females
+//chances of diabetes/heart attack for males and females
 foreach out in diabetes heartatk{
 	forvalues i = 1/2{
-		forvalues k = 1/2{			
-			svy, subpop(if sex==`i'): logit `out' ${cov`k'}
-			estimates store m`k'`out'_s`i'
-		}
-		margins i.race, subpop(if sex==`i') post
+			svy, subpop(if sex==`i'): logit `out' ${cov1}
+			estimates store m1`out'_s`i'
+			estimates restore m1`out'_s`i'
+			margins i.race, post
+			matrix temp = r(table)
+			esttab matrix(temp) using Table1_margins.csv,  nomtitles nonum append label
+		/*margins i.race, subpop(if sex==`i') post
 		estimates store ma2`out'_s`i'
 		if `i'==1 ///
 			marginsplot, title("Male") name(g2`out'_s`i', replace)
 		if `i'==2 ///
-			marginsplot, title("Female") name(g2`out'_s`i', replace)
+			marginsplot, title("Female") name(g2`out'_s`i', replace)*/
 	}
 }
 graph combine g2diabetes_s1 g2diabetes_s2, ycommon name(g2diabetes_combined, replace)
@@ -108,8 +110,7 @@ graph combine g2heartatk_s1 g2heartatk_s2, ycommon name(g2heartatk_combined, rep
 *Export results to CSV 
 foreach x in diabetes heartatk{
 	esttab m1`x'_s1  m1`x'_s2 ///
-		m2`x'_s1 m2`x'_s2 ///
-		using Table1.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) ///
+		using Table1.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 		mtitle("m1_Male" "m1_Female" "m2_Male" "m2_Female") append label stats(N_sub)
 }
 
@@ -137,7 +138,7 @@ marginsplot, name(diabetes_black, replace)
 
 *Export result to CSV 
 esttab mldiabetes ///
-	using Table2.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) ///
+	using Table2.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 	mtitle("mldiabetes") append label stats(N_sub)
 
 //Using loop to get regression for diastolic blood pressure difference between gender
@@ -178,7 +179,7 @@ marginsplot, title("Age Blood Pressure, Predective Margins") ytitle("pr(blood pr
 
 *Export result to CSV
 esttab mlbpsystol ///
-	using Table4.csv, eform cells(b(fmt(2) star) & ci(par("[" ";" "]"))) ///
+	using Table4.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 	mtitle("mlbpsystol") append label stats(N_sub)
 
 //comparing mlogit vs ologit on systolic blood pressure differences between sex in Black population
@@ -202,7 +203,7 @@ coefplot (mlogit_sex1_bp, label(male blood pressure)), bylabel(mlogit Male) || /
 *Export results to CSV 
 foreach model in mlogit ologit{
 	esttab  `model'_systlobin_sex1 `model'_systlobin_sex2 ///
-		using Table5.csv, eform cells(b(fmt(2) star) & ci(par("[" ";" "]"))) ///
+		using Table5.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 		mtitle("Male" "Female") append label stats(N_sub)
 } 
 
@@ -226,7 +227,7 @@ coefplot (mlogit_sex1_health, label(male health status)), bylabel(mlogit Male) |
 *Export results to CSV 
 foreach model in mlogit ologit{
 	esttab  `model'_health_sex1 `model'_health_sex2 ///
-		using Table6.csv, eform cells(b(fmt(2) star) & ci(par("[" ";" "]"))) ///
+		using Table6.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 		mtitle("Male" "Female") append label stats(N_sub)
 }
 

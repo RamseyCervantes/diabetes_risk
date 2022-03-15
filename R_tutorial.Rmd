@@ -1,0 +1,72 @@
+---
+title: "R_tutorial"
+author: "Ramsey Cervantes"
+date: "3/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+The objective of this code is to learn how to import into R an excel file containing marginal estimates generated in Stata. Then reformatting the data in order to have it become organized for plotting using ggplot. Once this has been accomplished, it will then be put into an rmd file and knitted to an html file.
+
+## Reading in Data
+
+```{r reading data}
+# read csv file generated from Stata margins
+data <- read.csv("Table1_margins.csv")
+# remove equal signs from cells
+data <- lapply(data, function(x) gsub("=","",x))
+# read in data
+data <- data.frame(data)
+```
+
+## Formatting the Data
+
+```{r format data}
+# store column names
+n <-c('b','se','t','pvalue','ll','ul','df','crit','eform',rep(c('x','b','se','t','pvalue','ll','ul','df','crit','eform'),3))
+# transpose data
+data <- t(data[,-1])[,c(1:39)]
+# assign column and row names
+colnames(data) <- n
+rownames(data) <- NULL
+# subset the columns we need
+data <- data[,c(1,4,5,6,11,14,15,16,21,24,25,26,31,34,35,36)]
+# separate data into identifiable groups
+male_diabetes <- as.data.frame(data[,c(1:4)])
+female_diabetes <- as.data.frame(data[,c(5:8)])
+male_heartatk <- as.data.frame(data[,c(9:12)])
+female_heartatk <- as.data.frame(data[,c(13:16)])
+data <- rbind(male_diabetes, female_diabetes, male_heartatk, female_heartatk)
+# generate/populate identifier columns
+data$race <- rep(c("White","Black","Other"),4)
+data$type <- rep(c("Diabetes","Heart Attack"),each=6)
+data$sex <- rep(rep(c("Male","Female"),each=3),2)
+data[,c(1,2,3,4)] <- sapply(data[,c(1,2,3,4)], as.numeric)
+# separate data by health risk type
+data_diabetes <- data[1:6,]
+data_heartatk <- data[7:12,]
+```
+
+## Generating Plots
+
+```{r create plots}
+# generate diabetes risk plot
+plot_diabetes <- ggplot(data_diabetes, aes(x=race, y=b,colour=sex,group=sex)) +
+  geom_pointrange(aes(x=race, y=b, ymin=ll, ymax=ul),position=position_dodge(0.3),size=1.05)+
+  labs(y="Marginal Probabilities", x="Race",title="Risk of Diabetes",colour='', shape='')+theme_bw()
+# generate heart attack risk plot
+plot_heartatk <- ggplot(data_heartatk, aes(x=race, y=b,colour=sex,group=sex)) +
+  geom_pointrange(aes(x=race, y=b, ymin=ll, ymax=ul),position=position_dodge(0.3),size=1.05)+
+  labs(y="Marginal Probabilities", x="Race",title="Risk of Heart Attack",colour='', shape='')+theme_bw()
+```
+
+## Health Risk Plots
+
+```{r display plots, echo=FALSE}
+plot(plot_diabetes)
+plot(plot_heartatk)
+```
