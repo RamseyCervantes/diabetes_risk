@@ -95,7 +95,12 @@ foreach out in diabetes heartatk{
 			estimates restore m1`out'_s`i'
 			margins i.race, post
 			matrix temp = r(table)
-			esttab matrix(temp) using Table1_margins.csv,  nomtitles nonum append label
+			*esttab matrix(temp) using Table1_margins.xls,  nomtitles nonum append label
+			preserve
+			drop _all
+			svmat2 temp, names("White" "Black" "Other") rnames("estimates")
+			save `out'_s`i'.dta, replace
+			restore
 		/*margins i.race, subpop(if sex==`i') post
 		estimates store ma2`out'_s`i'
 		if `i'==1 ///
