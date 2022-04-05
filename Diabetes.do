@@ -14,9 +14,9 @@ svyset psu [pweight = finalwgt], strata(strata)
 global demograph "i.race i.sex"
 global cov1 "i.race c.age c.weight c.height"
 global cov2 "i.race $cov1"
-//global workdir "C:\Users\ramse\Documents\GitLab\Ramsey Onboarding"
+global workdir "C:\Users\ramse\Documents\GitLab\Ramsey Onboarding"
 
-//cd $workdir
+cd "$workdir"
 
 capture noisily: rmdir "csv"
 capture noisily: mkdir "csv"
@@ -118,6 +118,9 @@ foreach x in diabetes heartatk{
 		using Table1.csv, cells(b(fmt(2) star) & ci(par("[" ";" "]"))) eform ///
 		mtitle("m1_Male" "m1_Female" "m2_Male" "m2_Female") append label stats(N_sub)
 }
+
+regress diabetes i.race##i.sex c.age c.weight c.height
+margins i.race#i.sex
 
 //Analyze risk for diabetes and heart attack between sex across different races
 coefplot (ma2diabetes_s1, xlabel(100 "male diabetes", add)) (ma2diabetes_s2, label(female diabetes)), bylabel(Risk of Diabetes) || ///
